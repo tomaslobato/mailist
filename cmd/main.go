@@ -3,8 +3,10 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/joho/godotenv"
 	DB "github.com/tomaslobato/mailist/db"
@@ -24,9 +26,19 @@ func main() {
 	}
 	defer db.Close()
 
-	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
-		DB.QueryUsers(db)
-		w.Write([]byte("opusk"))
+	mux.HandleFunc("GET /emails", func(w http.ResponseWriter, r *http.Request) {
+		users, err := DB.QueryUsers(db)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		var userStrings []string
+		for _, user := range users {
+			userStrings = append(userStrings, fmt.Sprintf("%d: %s\n", user.ID, user.Email))
+		}
+
+		uString := strings.Join(userStrings, "\n")
+		w.Write([]byte(uString))
 	})
 	http.ListenAndServe(":3000", mux)
 }

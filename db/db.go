@@ -3,7 +3,6 @@ package DB
 import (
 	"database/sql"
 	"fmt"
-	"os"
 )
 
 type User struct {
@@ -11,11 +10,10 @@ type User struct {
 	Email string
 }
 
-func QueryUsers(db *sql.DB) {
+func QueryUsers(db *sql.DB) ([]User, error) {
 	rows, err := db.Query("SELECT * FROM emails")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to execute query: %v\n", err)
-		os.Exit(1)
+		return nil, fmt.Errorf("failed to execute query: %v", err)
 	}
 	defer rows.Close()
 
@@ -25,15 +23,15 @@ func QueryUsers(db *sql.DB) {
 		var user User
 
 		if err := rows.Scan(&user.ID, &user.Email); err != nil {
-			fmt.Println("Error scanning row:", err)
-			return
+			return nil, fmt.Errorf("error scanning row: %v", err)
 		}
 
 		users = append(users, user)
-		fmt.Println(user.ID, user.Email)
 	}
 
 	if err := rows.Err(); err != nil {
-		fmt.Println("Error during rows iteration:", err)
+		return nil, fmt.Errorf("error during rows iteration: %v", err)
 	}
+
+	return users, nil
 }
