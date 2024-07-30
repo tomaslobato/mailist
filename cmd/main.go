@@ -2,19 +2,23 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
-	"log"
+	"io"
 	"net/http"
 	"os"
-	"strings"
 
 	"github.com/joho/godotenv"
 	DB "github.com/tomaslobato/mailist/db"
 	_ "github.com/tursodatabase/libsql-client-go/libsql"
 )
 
+type EmailReq struct {
+	Email string `json:"email"`
+}
+
 func main() {
-	err := godotenv.Load()
+	err := godotenv.Load(".env.local")
 	mux := http.NewServeMux()
 	token := os.Getenv("TURSO_AUTH_TOKEN")
 	url := fmt.Sprintf("libsql://mailist-tomaslobato.turso.io?authToken=%s", token)
@@ -27,18 +31,41 @@ func main() {
 	defer db.Close()
 
 	mux.HandleFunc("GET /emails", func(w http.ResponseWriter, r *http.Request) {
-		users, err := DB.QueryUsers(db)
+		users, err := DB.GetUsers(db)
 		if err != nil {
-			log.Fatal(err)
+			http.Error(w, err.Error(), 500)
+			return
 		}
 
-		var userStrings []string
-		for _, user := range users {
-			userStrings = append(userStrings, fmt.Sprintf("%d: %s\n", user.ID, user.Email))
-		}
-
-		uString := strings.Join(userStrings, "\n")
-		w.Write([]byte(uString))
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(users)
 	})
+
+	mux.HandleFunc("POST /emails", func(w http.ResponseWriter, r *http.Request) {
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, "Error reading request body", http.StatusBadRequest)
+			return
+		}
+		defer r.Body.Close()
+
+		var emailReq EmailReq
+		json.Unmarshal(body, &emailReq)
+
+		if emailReq.Email == "" {
+			http.Error(w, "Email is required", http.StatusBadRequest)
+			return
+		}
+
+		id, err := DB.AddUser(db, emailReq.Email)
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]int{"id": id})
+	})
+
 	http.ListenAndServe(":3000", mux)
 }

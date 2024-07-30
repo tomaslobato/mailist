@@ -10,7 +10,7 @@ type User struct {
 	Email string
 }
 
-func QueryUsers(db *sql.DB) ([]User, error) {
+func GetUsers(db *sql.DB) ([]User, error) {
 	rows, err := db.Query("SELECT * FROM emails")
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute query: %v", err)
@@ -34,4 +34,18 @@ func QueryUsers(db *sql.DB) ([]User, error) {
 	}
 
 	return users, nil
+}
+
+func AddUser(db *sql.DB, email string) (int, error) {
+	result, err := db.Exec("INSERT INTO emails (email) VALUES (?)", email)
+	if err != nil {
+		return 0, fmt.Errorf("failed to insert new user:%v", err)
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return 0, fmt.Errorf("error getting last insert id: %v", err)
+	}
+
+	return int(id), nil
 }
