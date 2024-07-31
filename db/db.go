@@ -49,3 +49,16 @@ func AddUser(db *sql.DB, email string) (int, error) {
 
 	return int(id), nil
 }
+
+func GetUserById(db *sql.DB, id int) (*User, error) {
+	var user User
+	err := db.QueryRow("SELECT id, email FROM emails WHERE id = ?", id).Scan(&user.ID, &user.Email)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("user not found with id: %d", id)
+		}
+		return nil, fmt.Errorf("Error getting email by ID: %s", err)
+	}
+
+	return &user, nil
+}
