@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/tomaslobato/mailist/router"
+	_ "github.com/tursodatabase/libsql-client-go/libsql"
 )
 
 var db *sql.DB
