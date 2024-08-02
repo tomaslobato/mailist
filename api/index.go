@@ -14,7 +14,7 @@ var db *sql.DB
 var appPwd string
 
 func init() {
-	err := godotenv.Load(".env.local")
+	err := godotenv.Load()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to load .env.local file")
 		os.Exit(1)
