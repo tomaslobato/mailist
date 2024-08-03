@@ -1,4 +1,4 @@
-package handlers
+package router
 
 import (
 	"database/sql"
@@ -13,7 +13,7 @@ import (
 	"github.com/tomaslobato/mailist/utils"
 )
 
-func SendEmail(w http.ResponseWriter, r *http.Request, db *sql.DB, appPwd string) {
+func SendEmail(w http.ResponseWriter, r *http.Request, db *sql.DB, appPwd string, adminCode string) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Error reading request body", 400)
@@ -22,6 +22,15 @@ func SendEmail(w http.ResponseWriter, r *http.Request, db *sql.DB, appPwd string
 
 	var sendReq models.SendEmailReq
 	json.Unmarshal(body, &sendReq)
+
+	if sendReq.AdminCode == "" {
+		http.Error(w, "Admin code not found", 400)
+		return
+	}
+	if sendReq.AdminCode != adminCode {
+		http.Error(w, "Admin code is wrong", 403)
+		return
+	}
 
 	err = utils.SendEmail(db, appPwd, sendReq)
 	if err != nil {

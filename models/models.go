@@ -5,6 +5,7 @@ type EmailReq struct {
 }
 
 type SendEmailReq struct {
-	Subject string `json:"subject"`
-	Body    string `json:"body"`
+	AdminCode string `json:"adminCode"`
+	Subject   string `json:"subject"`
+	Body      string `json:"body"`
 }

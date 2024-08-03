@@ -20,6 +20,7 @@ func main() {
 
 	tursoUrl := os.Getenv("TURSO_URL")
 	appPwd := os.Getenv("GMAIL_APP_PASSWORD")
+	adminCode := os.Getenv("ADMIN_CODE")
 
 	db, err := sql.Open("libsql", tursoUrl)
 	if err != nil {
@@ -33,5 +34,5 @@ func main() {
 		port = "3000"
 	}
 
-	http.ListenAndServe(":"+port, router.SetupRoutes(db, appPwd))
+	http.ListenAndServe(":"+port, router.SetupRoutes(db, appPwd, adminCode))
 }

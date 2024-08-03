@@ -1,5 +1,7 @@
 package api
 
+//needed for vercel deployment
+
 import (
 	"database/sql"
 	"fmt"
@@ -12,17 +14,19 @@ import (
 
 var db *sql.DB
 var appPwd string
+var adminCode string
 
 func init() {
 	dbUrl := os.Getenv("TURSO_URL")
 	appPwd = os.Getenv("GMAIL_APP_PASSWORD")
+	adminCode = os.Getenv("ADMIN_CODE")
 
-	db, err := sql.Open("libsql", dbUrl)
+	var err error
+	db, err = sql.Open("libsql", dbUrl)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to open db: %s", err)
 		os.Exit(1)
 	}
-	defer db.Close()
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -31,5 +35,5 @@ func init() {
 }
 
 func Handler(w http.ResponseWriter, r *http.Request) {
-	router.SetupRoutes(db, appPwd).ServeHTTP(w, r)
+	router.SetupRoutes(db, appPwd, adminCode).ServeHTTP(w, r)
 }
