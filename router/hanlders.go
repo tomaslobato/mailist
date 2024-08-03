@@ -70,7 +70,7 @@ func AddEmail(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 
 func GetEmailById(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	path := r.URL.Path
-	id := path[len("/emails/"):] //everything after /emails/
+	id := path[len("/api/email/"):] //everything after /api/email/
 
 	if !isNumeric(id) {
 		http.Error(w, "id must be a number", 422)
