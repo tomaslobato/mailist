@@ -14,10 +14,6 @@ import (
 	"github.com/tomaslobato/mailist/utils"
 )
 
-type Response struct {
-	Message string `json:"message"`
-}
-
 func GetHome(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "./public/index.html")
 }
@@ -67,10 +63,9 @@ func AddEmail(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 
 		json.Unmarshal(body, &emailReq)
 		if emailReq.Email == "" {
-			response := Response{Message: "Email is required"}
 			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(response)
+			w.WriteHeader(400)
+			w.Write([]byte("Email is required"))
 		}
 		fmt.Println("application json")
 	case "application/x-www-form-urlencoded":
@@ -100,6 +95,7 @@ func AddEmail(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	}
 
 	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(400)
 	w.Write([]byte("Email is already on the list"))
 }
 

@@ -2,7 +2,7 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
+	"log"
 	"net/http"
 	"os"
 
@@ -14,8 +14,7 @@ import (
 func main() {
 	err := godotenv.Load(".env.local")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to load .env.local file")
-		os.Exit(1)
+		log.Fatalf("Failed to load .env.local file: %v", err)
 	}
 
 	tursoUrl := os.Getenv("TURSO_URL")
@@ -24,8 +23,7 @@ func main() {
 
 	db, err := sql.Open("libsql", tursoUrl)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to open db: %s", err)
-		os.Exit(1)
+		log.Fatalf("Failed to open db: %v", err)
 	}
 	defer db.Close()
 
@@ -34,5 +32,8 @@ func main() {
 		port = "3000"
 	}
 
-	http.ListenAndServe(":"+port, router.SetupRoutes(db, appPwd, adminCode))
+	err = http.ListenAndServe(":"+port, router.SetupRoutes(db, appPwd, adminCode))
+	if err != nil {
+		log.Fatalf("Failed to start server: %v", err)
+	}
 }
