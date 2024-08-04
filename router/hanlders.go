@@ -19,7 +19,7 @@ type Response struct {
 }
 
 func GetHome(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "./static/index.html")
+	http.ServeFile(w, r, "./public/index.html")
 }
 
 func SendEmail(w http.ResponseWriter, r *http.Request, db *sql.DB, appPwd string, adminCode string) {
