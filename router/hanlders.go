@@ -3,6 +3,7 @@ package router
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -12,6 +13,14 @@ import (
 	"github.com/tomaslobato/mailist/models"
 	"github.com/tomaslobato/mailist/utils"
 )
+
+type Response struct {
+	Message string `json:"message"`
+}
+
+func GetHome(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "./static/index.html")
+}
 
 func SendEmail(w http.ResponseWriter, r *http.Request, db *sql.DB, appPwd string, adminCode string) {
 	body, err := io.ReadAll(r.Body)
@@ -43,29 +52,55 @@ func SendEmail(w http.ResponseWriter, r *http.Request, db *sql.DB, appPwd string
 }
 
 func AddEmail(w http.ResponseWriter, r *http.Request, db *sql.DB) {
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, "Error reading request body", 400)
-		return
-	}
-	defer r.Body.Close()
-
 	var emailReq models.EmailReq
-	json.Unmarshal(body, &emailReq)
 
-	if emailReq.Email == "" {
-		http.Error(w, "Email is required", 400)
+	//check Content-Type header
+	var contentType = r.Header.Get("Content-Type")
+	switch contentType {
+	case "application/json":
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, "Error reading request body", 400)
+			return
+		}
+		defer r.Body.Close()
+
+		json.Unmarshal(body, &emailReq)
+		if emailReq.Email == "" {
+			response := Response{Message: "Email is required"}
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(response)
+		}
+		fmt.Println("application json")
+	case "application/x-www-form-urlencoded":
+		if err := r.ParseForm(); err != nil {
+			http.Error(w, "error parsing FormData", 500)
+			return
+		}
+		emailReq.Email = r.FormValue("email")
+	default:
+		http.Error(w, "unsupported content type", 400)
 		return
 	}
 
-	id, err := DB.AddUser(db, emailReq.Email)
+	//check if it already exists
+	users, err := DB.GetUsers(db)
+	for _, u := range users {
+		if u.Email == emailReq.Email {
+			w.Write([]byte("Email is already on the list"))
+			return
+		}
+	}
+
+	_, err = DB.AddUser(db, emailReq.Email)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]int{"id": id})
+	w.Header().Set("Content-Type", "text/plain")
+	w.Write([]byte("Email is already on the list"))
 }
 
 func GetEmailById(w http.ResponseWriter, r *http.Request, db *sql.DB) {

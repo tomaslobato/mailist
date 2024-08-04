@@ -1,0 +1,78 @@
+<!doctype html>
+<html>
+    <head>
+        <title>?</title>
+        <meta charset="utf-8" />
+        <script src="https://unpkg.com/htmx.org@2.0.1"></script>
+
+        <style>
+            body {
+                margin: 0;
+            }
+
+            main {
+                width: 400px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                border-left: 2px solid black;
+                border-right: 2px solid black;
+                height: 100vh;
+                margin: auto;
+                padding: 20px;
+            }
+
+            label {
+                font-size: 24px;
+                margin-bottom: 6px;
+            }
+
+            input {
+                width: 250px;
+                padding: 0 8px;
+                border-radius: 8px;
+                border: 2px solid black;
+                transition: 0.1s;
+            }
+
+            input:focus {
+                background-color: gainsboro;
+            }
+            button:focus {
+                background-color: gainsboro;
+            }
+
+            button {
+                border-radius: 8px;
+            }
+        </style>
+    </head>
+    <body style="margin: 0">
+        <main>
+            <label for="email" style="font-size: 24px; margin-bottom: 6px"
+                >Add your email to the list!</label
+            >
+            <div style="height: 36px; display: flex; gap: 6px">
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="youremail@example.com"
+                    required
+                />
+                <button
+                    style="border-radius: 8px"
+                    hx-post="/api/email"
+                    type="submit"
+                    hx-include="#email"
+                    hx-target="#response"
+                    hx-swap="innerHTML"
+                    hx-on="htmx:afterRequest: handleResponse"
+                >
+                    Add
+                </button>
+            </div>
+            <div id="response" style="margin: 8px"></div>
+        </main>
+    </body>
+</html>
